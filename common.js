@@ -29,7 +29,7 @@ new Promise( function (resolve) {
                 if (response.error) {
                     reject(new Error(response.error.error_msg));
                 } else {
-                    console.log(response);
+
                     Handlebars.registerHelper('formatAge', function(bdate) {
                         var year = new Date().getFullYear();
                         var byear = String(bdate).split('.');
@@ -39,11 +39,46 @@ new Promise( function (resolve) {
                         return useryear;
                     });
 
+
+                    var result = [];
+                    for(var i = 0;i < response.response.length; i++){
+                        var userbdate = response.response[i].bdate;
+                        var arrdate = String(userbdate).split('.');
+                        if(arrdate && arrdate.length >= 2){
+                            var day = arrdate[0];
+                            var month = arrdate[1];
+                            var resb = new Date(new Date().getFullYear(), month-1, day).getTime();
+                            var newobj = response.response[i];
+                            newobj.date =resb;
+                            result.push(newobj)
+                        }
+
+                    };
+                    console.log(newobj)
+
+                    var now = new Date().getTime();
+                    var newresult = result.filter(function (item){
+                        var filter = item.date;
+                        return filter > now
+
+                    });
+
+                   newresult.sort(function(a,b){
+                        return a.date - b.date;
+                    });
+
+                    result.forEach(function (item) {
+                        if(newresult.indexOf(item) == -1){
+                            newresult.push(item);
+                        }
+                    });
+
+
                     var userTemplate = document.querySelector('#userTemplate');
                     var userArea = document.querySelector('#userArea');
                     var source = userTemplate.innerHTML;
                     var templateFn = Handlebars.compile(source);
-                    var template = templateFn({list: response.response});
+                    var template = templateFn({list: newresult});
                     userArea.innerHTML = template;
                     resolve();
                 }
